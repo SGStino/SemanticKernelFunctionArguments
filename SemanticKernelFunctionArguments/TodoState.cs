@@ -11,7 +11,7 @@ public class TodoState
     {
         if (!todos.TryGetValue(scope, out var result))
             todos[scope] = result = [];
-        Console.WriteLine($"@add_todos({string.Join(", ", items)}, {scope})");
+        Console.WriteLine($"    @add_todos({string.Join(", ", items)}, {scope})");
         result.AddRange(items.Except(result));
         return [.. result];
     }
@@ -19,13 +19,13 @@ public class TodoState
     {
         if (todos.TryGetValue(scope, out var result))
             return result.RemoveAll(items.Contains);
-        Console.WriteLine($"@remove_todos({string.Join(", ", items)}, {scope})");
+        Console.WriteLine($"    @remove_todos({string.Join(", ", items)}, {scope})");
         return 0;
     }
 
     public string[] get_todos(string scope)
     {
-        Console.WriteLine($"@get_todos({scope})");
+        Console.WriteLine($"    @get_todos({scope})");
         if (todos.TryGetValue(scope, out var result))
             return [.. result];
         return [];
@@ -33,7 +33,7 @@ public class TodoState
 
     public string[] get_scopes()
     {
-        Console.WriteLine($"@get_scopes()");
+        Console.WriteLine($"    @get_scopes()");
         return [.. todos.Keys];
     }
 
