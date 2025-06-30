@@ -3,6 +3,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using System.Text.Json;
 
 var config = new ConfigurationBuilder()
     .AddUserSecrets<Program>()
@@ -90,3 +91,56 @@ await RunTest([
             Description = "List all known scopes/groups"
         })).AsKernelFunction()
     ], todos2.todos);
+
+
+
+
+Console.WriteLine("----Raw Calls----");
+var todos3 = new TodoState();
+var rawTest = new DebugAIFunction(AIFunctionFactory.Create(todos3.add_todos, new()
+{
+    Name = "add_todos",
+    Description = "Add todo items to a specific scope/group"
+}));
+{
+    Console.WriteLine("--objects--");
+    var result = await rawTest.InvokeAsync(new(new Dictionary<string, object>()
+    {
+        ["items"] = new string[] { "bread", "chicken" },
+        ["scope"] = "shopping"
+    }));
+
+    Console.WriteLine(result);
+}
+
+try
+{
+    Console.WriteLine("--JSON string--");
+    var result = await rawTest.InvokeAsync(new(new Dictionary<string, object>()
+    {
+        ["items"] = "[ \"bread\", \"chicken\" ]",
+        ["scope"] = "shopping"
+    }));
+
+    Console.WriteLine(result);
+}
+catch (Exception e)
+{
+    Console.WriteLine(e.Message);
+}
+
+try
+{
+    Console.WriteLine("--JsonElement--");
+    var result = await rawTest.InvokeAsync(new(new Dictionary<string, object>()
+    {
+        ["items"] = JsonDocument.Parse("[ \"bread\", \"chicken\" ]").RootElement,
+        ["scope"] = "shopping"
+    }));
+
+    Console.WriteLine(result);
+}
+catch (Exception e)
+{
+    Console.WriteLine(e.Message);
+}
