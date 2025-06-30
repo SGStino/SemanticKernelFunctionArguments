@@ -5,6 +5,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using System.Text.Json;
 
+#pragma warning disable SKEXP0001 
 var config = new ConfigurationBuilder()
     .AddUserSecrets<Program>()
     .Build();
@@ -45,12 +46,17 @@ async Task RunTest(KernelFunction[] functions, Dictionary<string, List<string>> 
     }
 }
 
+Console.BackgroundColor = ConsoleColor.White;
+Console.ForegroundColor = ConsoleColor.Black;
+Console.WriteLine("----OpenAI Calls----");
+Console.ResetColor();
 
 var todos1 = new TodoState();
 var todos2 = new TodoState();
-
+Console.BackgroundColor = ConsoleColor.Green;
+Console.ForegroundColor = ConsoleColor.Black;
 Console.WriteLine("--KernelFunction--");
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+Console.ResetColor(); 
 await RunTest([
         new DebugAIFunction( KernelFunctionFactory.CreateFromMethod(todos1.add_todos, new(){
             FunctionName = "add_todos",
@@ -68,11 +74,12 @@ await RunTest([
             FunctionName = "get_Scopes",
             Description = "List all known scopes/groups"
         })).AsKernelFunction()
-    ], todos1.todos);
-#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+    ], todos1.todos); 
 
+Console.BackgroundColor = ConsoleColor.Red;
+Console.ForegroundColor = ConsoleColor.Black;
 Console.WriteLine("--AIFunction--");
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+Console.ResetColor();// Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 await RunTest([
         new DebugAIFunction(AIFunctionFactory.Create(todos2.add_todos, new(){
             Name = "add_todos",
@@ -93,18 +100,24 @@ await RunTest([
     ], todos2.todos);
 
 
-
-
+Console.BackgroundColor = ConsoleColor.White;
+Console.ForegroundColor = ConsoleColor.Black;
 Console.WriteLine("----Raw Calls----");
-var todos3 = new TodoState();
-var rawTest = new DebugAIFunction(AIFunctionFactory.Create(todos3.add_todos, new()
+Console.ResetColor();
+
+Console.BackgroundColor = ConsoleColor.Green;
+Console.ForegroundColor = ConsoleColor.Black;
+Console.WriteLine("--KernelFunction--");
+Console.ResetColor();
+var todos4 = new TodoState();
+var rawTestKernel = new DebugAIFunction(KernelFunctionFactory.CreateFromMethod(todos4.add_todos, new()
 {
-    Name = "add_todos",
+    FunctionName = "add_todos",
     Description = "Add todo items to a specific scope/group"
 }));
 {
     Console.WriteLine("--objects--");
-    var result = await rawTest.InvokeAsync(new(new Dictionary<string, object>()
+    var result = await rawTestKernel.InvokeAsync(new(new Dictionary<string, object>()
     {
         ["items"] = new string[] { "bread", "chicken" },
         ["scope"] = "shopping"
@@ -116,7 +129,7 @@ var rawTest = new DebugAIFunction(AIFunctionFactory.Create(todos3.add_todos, new
 try
 {
     Console.WriteLine("--JSON string--");
-    var result = await rawTest.InvokeAsync(new(new Dictionary<string, object>()
+    var result = await rawTestKernel.InvokeAsync(new(new Dictionary<string, object>()
     {
         ["items"] = "[ \"bread\", \"chicken\" ]",
         ["scope"] = "shopping"
@@ -132,7 +145,60 @@ catch (Exception e)
 try
 {
     Console.WriteLine("--JsonElement--");
-    var result = await rawTest.InvokeAsync(new(new Dictionary<string, object>()
+    var result = await rawTestKernel.InvokeAsync(new(new Dictionary<string, object>()
+    {
+        ["items"] = JsonDocument.Parse("[ \"bread\", \"chicken\" ]").RootElement,
+        ["scope"] = "shopping"
+    }));
+
+    Console.WriteLine(result);
+}
+catch (Exception e)
+{
+    Console.WriteLine(e.Message);
+}
+
+Console.BackgroundColor = ConsoleColor.Red;
+Console.ForegroundColor = ConsoleColor.Black;
+Console.WriteLine("--AIFunction--");
+Console.ResetColor();
+var todos3 = new TodoState();
+var rawTestAI = new DebugAIFunction(AIFunctionFactory.Create(todos3.add_todos, new()
+{
+    Name = "add_todos",
+    Description = "Add todo items to a specific scope/group"
+}));
+{
+    Console.WriteLine("--objects--");
+    var result = await rawTestAI.InvokeAsync(new(new Dictionary<string, object>()
+    {
+        ["items"] = new string[] { "bread", "chicken" },
+        ["scope"] = "shopping"
+    }));
+
+    Console.WriteLine(result);
+}
+
+try
+{
+    Console.WriteLine("--JSON string--");
+    var result = await rawTestAI.InvokeAsync(new(new Dictionary<string, object>()
+    {
+        ["items"] = "[ \"bread\", \"chicken\" ]",
+        ["scope"] = "shopping"
+    }));
+
+    Console.WriteLine(result);
+}
+catch (Exception e)
+{
+    Console.WriteLine(e.Message);
+}
+
+try
+{
+    Console.WriteLine("--JsonElement--");
+    var result = await rawTestAI.InvokeAsync(new(new Dictionary<string, object>()
     {
         ["items"] = JsonDocument.Parse("[ \"bread\", \"chicken\" ]").RootElement,
         ["scope"] = "shopping"
